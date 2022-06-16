@@ -1,0 +1,8 @@
+name = "ParticlePCARepresentation"
+uuid = "94498bef-6a69-445e-99ff-577e915efd67"
+authors = ["Benoît Richard <kolaru@hotmail.com>"]
+version = "0.1.0"
+
+[deps]
+Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
+MultivariateStats = "6f286f6a-111f-5878-ab1e-185364afe411"
