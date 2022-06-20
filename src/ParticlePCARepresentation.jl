@@ -7,7 +7,8 @@ import MultivariateStats: fit, projection
 
 export ParticlePCA
 export fit, projection
-export plot_component2D!
+export plot_component3D
+export plot_component2D, plot_component2D!
 
 struct ParticlePCA{T}
     model::PCA{T}
@@ -30,28 +31,64 @@ function projection(ppca::ParticlePCA)
     return reshape(pca_proj, ppca.ndims, ppca.nparts, :)
 end
 
+function plot_component3D(
+        ppca, positions ;
+        component = 1,
+        flip = false,
+        kwargs...)
+
+    comp = projection(ppca)[:, :, component]
+    comp = flip ? -comp : comp
+    arrow_starts = positions - comp./2
+
+    fig, ax = arrows(
+        arrow_starts[1, :], arrow_starts[2, :], arrow_starts[3, :],
+        comp[1, :], comp[2, :], comp[3, :] ;
+        align = :origin,
+        kwargs...
+    )
+
+    meshscatter!(
+        ax,
+        positions[1, :], positions[2, :], positions[3, :] ;
+        kwargs...
+    )
+
+    return fig, ax
+end
+
 function plot_component2D!(
         ax, ppca, positions ;
         component = 1,
+        flip = false,
         xaxis = 1,
         yaxis = 2,
         kwargs...)
 
     comp = projection(ppca)[:, :, component]
+    comp = flip ? -comp : comp
+    arrow_starts = positions - comp./2
 
     scatter!(
         ax,
-        positions[xaxis, :], positions[yaxis, :],
+        positions[xaxis, :], positions[yaxis, :] ;
         kwargs...
     )
 
     arrows!(
         ax,
-        positions[xaxis, :], positions[yaxis, :],
+        arrow_starts[xaxis, :], arrow_starts[yaxis, :],
         comp[xaxis, :], comp[yaxis, :] ;
-        align = :center,  # TODO Seems to not to what it should
+        align = :origin,
         kwargs...
     )
+end
+
+function plot_component2D(ppca, positions ; kwargs...)
+    fig = Figure()
+    ax = fig[1, 1] = Axis(fig)
+    plot_component2D!(ax, ppca, positions ; kwargs...)
+    return fig, ax
 end
 
 end
