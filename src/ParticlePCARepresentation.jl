@@ -3,10 +3,10 @@ module ParticlePCARepresentation
 using Makie
 using MultivariateStats
 
-import MultivariateStats: fit, projection
+import MultivariateStats: fit, projection, predict, reconstruct
 
 export ParticlePCA
-export fit, projection
+export fit, projection, predict, reconstruct
 export plot_component3D
 export plot_component2D, plot_component2D!
 
@@ -29,6 +29,26 @@ fit(::Type{<:ParticlePCA}, data) = ParticlePCA(data)
 function projection(ppca::ParticlePCA)
     pca_proj = projection(ppca.model)
     return reshape(pca_proj, ppca.ndims, ppca.nparts, :)
+end
+
+function predict(ppca::ParticlePCA, particles::Matrix)
+    flat = reshape(particles, ppca.ndims * ppca.nparts)
+    return predict(ppca.model, flat)
+end
+
+function predict(ppca::ParticlePCA, particles::Array{<:Any, 3})
+    flat = reshape(particles, ppca.ndims * ppca.nparts, :)
+    return predict(ppca.model, flat)
+end
+
+function reconstruct(ppca::ParticlePCA, projections::Vector)
+    recons = reconstruct(ppca.model, projections)
+    return reshape(recons, ppca.ndism, ppca.nparts)
+end
+
+function reconstruct(ppca::ParticlePCA, projections::Matrix)
+    recons = reconstruct(ppca.model, projections)
+    return reshape(recons, ppca.ndism, ppca.nparts, :)
 end
 
 function plot_component3D(
