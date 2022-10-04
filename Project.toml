@@ -4,5 +4,6 @@ authors = ["Benoît Richard <kolaru@hotmail.com>"]
 version = "0.1.0"
 
 [deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 MultivariateStats = "6f286f6a-111f-5878-ab1e-185364afe411"

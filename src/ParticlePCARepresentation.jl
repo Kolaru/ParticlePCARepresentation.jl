@@ -1,5 +1,6 @@
 module ParticlePCARepresentation
 
+using LinearAlgebra
 using Makie
 using MultivariateStats
 
@@ -9,6 +10,7 @@ export ParticlePCA
 export fit, projection, predict, reconstruct
 export plot_component3D
 export plot_component2D, plot_component2D!
+export animate_component2D!
 
 struct ParticlePCA{T}
     model::PCA{T}
@@ -23,6 +25,7 @@ function ParticlePCA(data::Array{T, 3}) where T
     model = fit(PCA, pca_data ; pratio=1.0)
     return ParticlePCA(model, ndims, nparts)
 end
+
 
 fit(::Type{<:ParticlePCA}, data) = ParticlePCA(data)
 
@@ -80,26 +83,38 @@ end
 function plot_component2D!(
         ax, ppca, positions ;
         component = 1,
+        componentscale = 1,
         flip = false,
         xaxis = 1,
         yaxis = 2,
+        scalealpha = false,
+        color = :black,
         kwargs...)
 
-    comp = projection(ppca)[:, :, component]
+    comp = projection(ppca)[:, :, component] * componentscale
     comp = flip ? -comp : comp
     arrow_starts = positions - comp./2
 
-    scatter!(
-        ax,
-        positions[xaxis, :], positions[yaxis, :] ;
-        kwargs...
-    )
+    if color isa Vector && scalealpha == true
+        norms = norm.(eachcol(comp))
+        color = map(zip(norms, color)) do (v, c)
+            (c, 0.2 + v/maximum(norms) * 0.8)
+        end
+    end
 
     arrows!(
         ax,
         arrow_starts[xaxis, :], arrow_starts[yaxis, :],
         comp[xaxis, :], comp[yaxis, :] ;
         align = :origin,
+        color,
+        kwargs...
+    )
+
+    scatter!(
+        ax,
+        positions[xaxis, :], positions[yaxis, :] ;
+        color,
         kwargs...
     )
 end
@@ -109,6 +124,29 @@ function plot_component2D(ppca, positions ; kwargs...)
     ax = fig[1, 1] = Axis(fig)
     plot_component2D!(ax, ppca, positions ; kwargs...)
     return fig, ax
+end
+
+function animate_component2D!(
+        ax, ppca, positions ;
+        amplitude = 1,
+        component = 1,
+        xaxis = 1,
+        yaxis = 2,
+        rate = 0.5,  # Half a cycle per second
+        kwargs...)
+
+    comp = projection(ppca)[:, :, component]
+    w = Observable(0.0)
+    xx = @lift(positions[xaxis, :] + $w * amplitude * comp[xaxis, :])
+    yy = @lift(positions[yaxis, :] + $w * amplitude * comp[yaxis, :])
+
+    scatter!(ax, xx, yy ; kwargs...)
+
+    return function frame(F ; framerate = 24)
+        t = F/framerate
+        θ = t * rate * 2π 
+        w[] = sin(θ)
+    end
 end
 
 end
