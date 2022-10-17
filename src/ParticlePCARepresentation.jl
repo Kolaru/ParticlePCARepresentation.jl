@@ -1,10 +1,12 @@
 module ParticlePCARepresentation
 
+using Colors
+using ColorSchemes
 using LinearAlgebra
 using Makie
 using MultivariateStats
 
-import MultivariateStats: fit, projection, predict, reconstruct
+import MultivariateStats: fit, mean, projection, predict, reconstruct
 
 export ParticlePCA
 export fit, projection, predict, reconstruct
@@ -18,16 +20,46 @@ struct ParticlePCA{T}
     nparts::Int
 end
 
+"""
+    ParticlePCA(data::Array{<:Any, 3})
+
+Compute the PCA for data from a particle system.
+
+`data` must have the shape `n_dimensions x n_particles x n_obs`.
+"""
 function ParticlePCA(data::Array{T, 3}) where T
     ndims, nparts, nobs = size(data)
     ndofs = ndims * nparts
     pca_data = reshape(data, ndofs, nobs)
-    model = fit(PCA, pca_data ; pratio=1.0)
+    model = fit(PCA, pca_data ; pratio = 1.0)
     return ParticlePCA(model, ndims, nparts)
 end
 
+"""
+    ParticlePCA(Σ::Matrix, μ::Vector ; ndims = 3)
+
+Create a particle PCA representation of data with covariance matrix Σ and
+mean μ.
+"""
+function ParticlePCA(Σ::Matrix, μ::Vector ; ndims = 3)
+    nparts = div(length(μ), ndims)
+    model = pcacov(Σ, μ ; pratio = 1.0)
+    return ParticlePCA(model, ndims, nparts)
+end
 
 fit(::Type{<:ParticlePCA}, data) = ParticlePCA(data)
+
+function covariance(pca::PCA)
+    return projection(pca) * Diagonal(principalvars(pca)) * projection(pca)'
+end
+
+function covariance(ppca::ParticlePCA)
+    Σ = covariance(ppca.model)
+    s = reshape(Σ, ppca.ndims, ppca.nparts, ppca.ndims, ppca.nparts)
+    return [s[:, i, :, j] for i in 1:ppca.nparts, j in 1:ppca.nparts]
+end
+
+mean(ppca::ParticlePCA) = reshape(mean(ppca.model), ppca.ndims, :)
 
 function projection(ppca::ParticlePCA)
     pca_proj = projection(ppca.model)
@@ -55,7 +87,7 @@ function reconstruct(ppca::ParticlePCA, projections::Matrix)
 end
 
 function plot_component3D(
-        ppca, positions ;
+        ppca, positions = mean(ppca) ;
         component = 1,
         flip = false,
         kwargs...)
@@ -81,9 +113,9 @@ function plot_component3D(
 end
 
 function plot_component2D!(
-        ax, ppca, positions ;
+        ax, ppca, positions = mean(ppca)  ;
         component = 1,
-        componentscale = 1,
+        componentscale = 0.5,
         flip = false,
         xaxis = 1,
         yaxis = 2,
@@ -91,7 +123,11 @@ function plot_component2D!(
         color = :black,
         kwargs...)
 
-    comp = projection(ppca)[:, :, component] * componentscale
+    ax.aspect = DataAspect()
+
+    rescale = maximum(positions) * componentscale
+
+    comp = projection(ppca)[:, :, component] * rescale
     comp = flip ? -comp : comp
     arrow_starts = positions - comp./2
 
@@ -119,15 +155,48 @@ function plot_component2D!(
     )
 end
 
-function plot_component2D(ppca, positions ; kwargs...)
+function plot_component2D(ppca, positions = mean(ppca) ; kwargs...)
     fig = Figure()
     ax = fig[1, 1] = Axis(fig)
     plot_component2D!(ax, ppca, positions ; kwargs...)
     return fig, ax
 end
 
+function plot_blobs!(
+        ax, ppca ;
+        colors = :black,
+        xaxis = 1,
+        yaxis = 2)
+    
+    if !(colors isa Vector)
+        colors = Iterators.repeated(colors)
+    end
+
+    for (μ, Σ, color) in zip(eachcol(mean(ppca)), diag(covariance(ppca)), colors)
+        μ = μ[[xaxis, yaxis]]
+        Σ = Σ[[xaxis, yaxis], [xaxis, yaxis]]
+
+        invΣ = inv(Σ)
+        gauss(u) = exp( -0.5 * dot(u - μ, invΣ, u - μ) )
+
+        c = parse(Colorant, color)
+        cmap = ColorScheme(range(RGBA(RGB(c), 0), c, length=10))
+        rad = sqrt(maximum(Σ)) * 2
+        xs = μ[1] .+ range(-rad, rad, length=51)
+        ys = μ[2] .+ range(-rad, rad, length=51)
+        zs = [gauss([x, y]) for x in xs, y in ys]
+
+        contourf!(
+            ax, xs, ys, zs ;
+            colormap = cmap,
+            levels = range(0, 1, length=10))
+
+        scatter!(ax, μ[1], μ[2] ; color=:red)
+    end
+end
+
 function animate_component2D!(
-        ax, ppca, positions ;
+        ax, ppca, positions = mean(ppca) ;
         amplitude = 1,
         component = 1,
         xaxis = 1,
