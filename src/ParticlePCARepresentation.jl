@@ -10,6 +10,7 @@ import MultivariateStats: fit, mean, projection, predict, reconstruct
 
 export ParticlePCA
 export fit, projection, predict, reconstruct
+export plot_blobs, plot_blobs!
 export plot_component3D
 export plot_component2D, plot_component2D!
 export animate_component2D!
@@ -44,6 +45,12 @@ mean μ.
 function ParticlePCA(Σ::Matrix, μ::Vector ; ndims = 3)
     nparts = div(length(μ), ndims)
     model = pcacov(Σ, μ ; pratio = 1.0)
+    return ParticlePCA(model, ndims, nparts)
+end
+
+function ParticlePCA(proj::Matrix, μ::Vector, weights::Vector ; ndims = 3)
+    nparts = div(length(μ), ndims)
+    model = PCA(μ, proj, weights, sum(weights))
     return ParticlePCA(model, ndims, nparts)
 end
 
@@ -119,15 +126,16 @@ function plot_component2D!(
         flip = false,
         xaxis = 1,
         yaxis = 2,
-        scalealpha = false,
+        scalealpha = true,
         color = :black,
         kwargs...)
 
     ax.aspect = DataAspect()
 
-    rescale = maximum(positions) * componentscale
+    rescale = maximum(abs.(positions)) * componentscale
 
-    comp = projection(ppca)[:, :, component] * rescale
+    comp = projection(ppca)[:, :, component]
+    comp = comp * rescale / maximum(norm.(eachcol(comp)))
     comp = flip ? -comp : comp
     arrow_starts = positions - comp./2
 
@@ -193,6 +201,13 @@ function plot_blobs!(
 
         scatter!(ax, μ[1], μ[2] ; color=:red)
     end
+end
+
+function plot_blobs(ppca ; kwargs...)
+    fig = Figure()
+    ax = fig[1, 1] = Axis(fig)
+    plot_blobs!(ax, ppca ; kwargs...)
+    return fig, ax
 end
 
 function animate_component2D!(
