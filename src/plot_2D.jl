@@ -1,6 +1,7 @@
 
 function plot_component2D!(
-        ax, ppca, positions = mean(ppca)  ;
+        ax, ppca ;
+        positions = mean(ppca),
         component = 1,
         componentscale = 0.5,
         flip = false,
@@ -43,10 +44,10 @@ function plot_component2D!(
     )
 end
 
-function plot_component2D(ppca, positions = mean(ppca) ; kwargs...)
+function plot_component2D(ppca ; kwargs...)
     fig = Figure()
     ax = fig[1, 1] = Axis(fig)
-    plot_component2D!(ax, ppca, positions ; kwargs...)
+    plot_component2D!(ax, ppca ; kwargs...)
     return fig, ax
 end
 
@@ -111,4 +112,32 @@ function animate_component2D!(
         θ = t * rate * 2π 
         w[] = sin(θ)
     end
+end
+
+
+function summarize(gridpos, ppca ; components = 1:6, positions = mean(ppca), kwargs...)
+    layout = GridLayout(gridpos, 2, length(components))
+    axes = [Axis(layout[i, j]) for i in 1:2, j in eachindex(components)]
+
+    rowgap!(layout, 1, 0)
+    hidexdecorations!.(axes[1, :], grid = false, ticks = false)
+    hideydecorations!.(axes[:, 2:end], grid = false, ticks = false)
+
+    pad = maximum(abs.(positions))
+    xlims = (minimum(positions[1, :]) - pad, maximum(positions[1, :]) + pad)
+    ylims = (minimum(positions[2, :]) - pad, maximum(positions[2, :]) + pad)
+    zlims = (minimum(positions[3, :]) - pad, maximum(positions[3, :]) + pad)
+
+    for (j, component) in enumerate(components)
+        layout[0, j] = Label(gridpos.layout.parent, "Component $component", tellwidth = false)
+
+        xlims!(axes[1, j], xlims)
+        xlims!(axes[2, j], xlims)
+        ylims!(axes[1, j], ylims)
+        ylims!(axes[2, j], zlims)
+        plot_component2D!(axes[1, j], ppca ; component, positions, yaxis = 2, kwargs...)
+        plot_component2D!(axes[2, j], ppca ;  component, positions, yaxis = 3, kwargs...)
+    end
+
+    return layout, axes
 end

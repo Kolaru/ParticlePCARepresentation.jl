@@ -12,7 +12,7 @@ export ParticlePCA
 export fit, projection, predict, reconstruct
 export plot_blobs, plot_blobs!
 export plot_component3D
-export plot_component2D, plot_component2D!
+export plot_component2D, plot_component2D!, summarize
 export animate_component2D!
 
 include("ppca.jl")
