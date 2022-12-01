@@ -115,7 +115,11 @@ function animate_component2D!(
 end
 
 
-function summarize(gridpos, ppca ; components = 1:6, positions = mean(ppca), kwargs...)
+function summarize(gridpos, ppca ;
+        components = 1:6,
+        positions = mean(ppca),
+        labels = nothing,
+        kwargs...)
     layout = GridLayout(gridpos, 2, length(components))
     axes = [Axis(layout[i, j]) for i in 1:2, j in eachindex(components)]
 
@@ -123,13 +127,14 @@ function summarize(gridpos, ppca ; components = 1:6, positions = mean(ppca), kwa
     hidexdecorations!.(axes[1, :], grid = false, ticks = false)
     hideydecorations!.(axes[:, 2:end], grid = false, ticks = false)
 
-    pad = maximum(abs.(positions))
+    pad = maximum(abs.(positions))/2
     xlims = (minimum(positions[1, :]) - pad, maximum(positions[1, :]) + pad)
     ylims = (minimum(positions[2, :]) - pad, maximum(positions[2, :]) + pad)
     zlims = (minimum(positions[3, :]) - pad, maximum(positions[3, :]) + pad)
 
     for (j, component) in enumerate(components)
-        layout[0, j] = Label(gridpos.layout.parent, "Component $component", tellwidth = false)
+        label = isnothing(labels) ? "Component $component" : labels[j]
+        layout[0, j] = Label(gridpos.layout.parent, label, tellwidth = false)
 
         xlims!(axes[1, j], xlims)
         xlims!(axes[2, j], xlims)
