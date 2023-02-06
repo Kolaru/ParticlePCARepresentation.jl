@@ -121,7 +121,7 @@ function summarize(gridpos, ppca ;
         labels = nothing,
         kwargs...)
     layout = GridLayout(gridpos, 2, length(components))
-    axes = [Axis(layout[i, j]) for i in 1:2, j in eachindex(components)]
+    axes = [Axis(layout[i, j]) for i in 3:4, j in eachindex(components)]
 
     rowgap!(layout, 1, 0)
     hidexdecorations!.(axes[1, :], grid = false, ticks = false)
@@ -134,7 +134,12 @@ function summarize(gridpos, ppca ;
 
     for (j, component) in enumerate(components)
         label = isnothing(labels) ? "Component $component" : labels[j]
-        layout[0, j] = Label(gridpos.layout.parent, label, tellwidth = false)
+        layout[1, j] = Label(gridpos.layout.parent, label, tellwidth = false)
+        evar = round(ppca.model.prinvars[component] / ppca.model.tvar ; sigdigits = 2)
+        layout[2, j] = Label(
+            gridpos.layout.parent,
+            "EVR = $evar",
+            tellwidth = false)
 
         xlims!(axes[1, j], xlims)
         xlims!(axes[2, j], xlims)
