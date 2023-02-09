@@ -55,7 +55,8 @@ function plot_blobs!(
         ax, ppca ;
         colors = :black,
         xaxis = 1,
-        yaxis = 2)
+        yaxis = 2,
+        cmap = nothing)
 
     if !(colors isa Vector)
         colors = Iterators.repeated(colors)
@@ -68,8 +69,11 @@ function plot_blobs!(
         invΣ = inv(Σ)
         gauss(u) = exp( -0.5 * dot(u - μ, invΣ, u - μ) )
 
-        c = parse(Colorant, color)
-        cmap = ColorScheme(range(RGBA(RGB(c), 0), c, length=10))
+        if isnothing(cmap)
+            c = parse(Colorant, color)
+            cmap = ColorScheme(range(RGBA(RGB(c), 0), c, length=10))
+        end
+        
         rad = sqrt(maximum(Σ)) * 2
         xs = μ[1] .+ range(-rad, rad, length=51)
         ys = μ[2] .+ range(-rad, rad, length=51)

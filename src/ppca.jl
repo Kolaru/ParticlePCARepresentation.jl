@@ -39,6 +39,7 @@ end
 
 fit(::Type{<:ParticlePCA}, data) = ParticlePCA(data)
 
+# TODO Change that
 function covariance(pca::PCA)
     return projection(pca) * Diagonal(principalvars(pca)) * projection(pca)'
 end
@@ -49,7 +50,25 @@ function covariance(ppca::ParticlePCA)
     return [s[:, i, :, j] for i in 1:ppca.nparts, j in 1:ppca.nparts]
 end
 
+# TODO Change that as well
 mean(ppca::ParticlePCA) = reshape(mean(ppca.model), ppca.ndims, :)
+
+function covariances(ppca::ParticlePCA)
+    Σ = covariance(ppca.model)
+    s = reshape(Σ, ppca.ndims, ppca.nparts, ppca.ndims, ppca.nparts)
+    return [s[:, i, :, j] for i in 1:ppca.nparts, j in 1:ppca.nparts]
+end
+
+function means(ppca::ParticlePCA)
+    @chain ppca.model begin
+        mean
+        reshape(_, ppca.ndims, :)
+        eachcol
+        collect
+    end
+end
+
+variances(ppca::ParticlePCA) = diag(covariances(ppca))
 
 function projection(ppca::ParticlePCA)
     pca_proj = projection(ppca.model)
@@ -74,4 +93,27 @@ end
 function reconstruct(ppca::ParticlePCA, projections::Matrix)
     recons = reconstruct(ppca.model, projections)
     return reshape(recons, ppca.ndism, ppca.nparts, :)
+end
+
+function blob_model(
+        ppca::ParticlePCA ;
+        dims = [1, 2],
+        atoms = 1:ppca.nparts)
+
+    μs = @chain ppca begin
+        means
+        _[atoms]
+        map(_) do μ
+            μ[dims]
+        end
+    end
+    Σs = @chain ppca begin
+        variances
+        _[atoms]
+        map(_) do Σ
+            Symmetric(Σ[dims, dims])
+        end
+    end
+
+    return MixtureModel(MultivariateNormal, collect(zip(μs, Σs)))
 end
