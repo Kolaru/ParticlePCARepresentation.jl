@@ -123,11 +123,14 @@ function summarize(gridpos, ppca ;
         components = 1:6,
         positions = mean(ppca),
         labels = nothing,
+        xlabel = "x",
+        ylabel = "y",
+        zlabel = "z",
         kwargs...)
     layout = GridLayout(gridpos, 2, length(components))
     axes = [Axis(layout[i, j]) for i in 3:4, j in eachindex(components)]
 
-    rowgap!(layout, 1, 0)
+    rowgap!(layout, 3, 0)
     hidexdecorations!.(axes[1, :], grid = false, ticks = false)
     hideydecorations!.(axes[:, 2:end], grid = false, ticks = false)
 
@@ -151,6 +154,13 @@ function summarize(gridpos, ppca ;
         ylims!(axes[2, j], zlims)
         plot_component2D!(axes[1, j], ppca ; component, positions, yaxis = 2, kwargs...)
         plot_component2D!(axes[2, j], ppca ;  component, positions, yaxis = 3, kwargs...)
+    end
+
+    axes[1, 1].ylabel = ylabel
+    axes[2, 1].ylabel = zlabel
+
+    for ax in axes[2, :]
+        ax.xlabel = xlabel
     end
 
     return layout, axes
