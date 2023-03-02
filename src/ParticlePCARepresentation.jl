@@ -15,6 +15,7 @@ export fit, projection, predict, reconstruct
 export covariances, means, variances, blob_model
 export plot_blobs, plot_blobs!
 export plot_component3D, plot_component3D!
+export animate_component3D!
 export plot_component2D, plot_component2D!, summarize
 export animate_component2D!
 

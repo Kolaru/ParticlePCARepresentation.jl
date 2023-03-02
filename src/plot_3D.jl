@@ -57,3 +57,25 @@ function plot_component3D!(
 
     return ax
 end
+
+function animate_component3D!(
+        ax, ppca, positions = mean(ppca) ;
+        amplitude = 1,
+        component = 1,
+        rate = 0.5,  # Half a cycle per second
+        kwargs...)
+
+    comp = projection(ppca)[:, :, component]
+    w = Observable(0.0)
+    xx = @lift(positions[1, :] + $w * amplitude * comp[1, :])
+    yy = @lift(positions[2, :] + $w * amplitude * comp[2, :])
+    zz = @lift(positions[3, :] + $w * amplitude * comp[3, :])
+
+    scatter!(ax, xx, yy, zz ; kwargs...)
+
+    return function frame(F ; framerate = 24)
+        t = F/framerate
+        θ = t * rate * 2π 
+        w[] = sin(θ)
+    end
+end

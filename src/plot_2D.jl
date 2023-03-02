@@ -56,7 +56,9 @@ function plot_blobs!(
         colors = :black,
         xaxis = 1,
         yaxis = 2,
-        cmap = nothing)
+        cmap = nothing,
+        plot! = contour!,
+        levels = 1)
 
     if !(colors isa Vector)
         colors = Iterators.repeated(colors)
@@ -79,10 +81,10 @@ function plot_blobs!(
         ys = μ[2] .+ range(-rad, rad, length=51)
         zs = [gauss([x, y]) for x in xs, y in ys]
 
-        contourf!(
+        plot!(
             ax, xs, ys, zs ;
             colormap = cmap,
-            levels = range(0, 1, length=10))
+            levels = levels)
 
         scatter!(ax, μ[1], μ[2] ; color=:red)
     end
