@@ -39,7 +39,6 @@ end
 
 fit(::Type{<:ParticlePCA}, data) = ParticlePCA(data)
 
-# TODO Change that
 function covariance(pca::PCA)
     return projection(pca) * Diagonal(principalvars(pca)) * projection(pca)'
 end
@@ -50,7 +49,6 @@ function covariance(ppca::ParticlePCA)
     return [s[:, i, :, j] for i in 1:ppca.nparts, j in 1:ppca.nparts]
 end
 
-# TODO Change that as well
 mean(ppca::ParticlePCA) = reshape(mean(ppca.model), ppca.ndims, :)
 
 function covariances(ppca::ParticlePCA)

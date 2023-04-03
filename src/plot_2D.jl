@@ -142,6 +142,7 @@ function summarize(gridpos, ppca ;
     zlims = (minimum(positions[3, :]) - pad, maximum(positions[3, :]) + pad)
 
     for (j, component) in enumerate(components)
+        component > length(ppca.model.prinvars) && continue
         label = isnothing(labels) ? "Component $component" : labels[j]
         layout[1, j] = Label(gridpos.layout.parent, label, tellwidth = false)
         evar = round(ppca.model.prinvars[component] / ppca.model.tvar ; sigdigits = 2)
