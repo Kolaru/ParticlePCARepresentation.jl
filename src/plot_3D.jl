@@ -59,10 +59,13 @@ function plot_component3D!(
 end
 
 function animate_component3D!(
-        ax, ppca, positions = mean(ppca) ;
+        fig, ax, ppca,
+        savepath, frames ;
+        positions = mean(ppca),
         amplitude = 1,
         component = 1,
         rate = 0.5,  # Half a cycle per second
+        framerate = 24,
         kwargs...)
 
     comp = projection(ppca)[:, :, component]
@@ -71,11 +74,30 @@ function animate_component3D!(
     yy = @lift(positions[2, :] + $w * amplitude * comp[2, :])
     zz = @lift(positions[3, :] + $w * amplitude * comp[3, :])
 
-    scatter!(ax, xx, yy, zz ; kwargs...)
-
-    return function frame(F ; framerate = 24)
+    meshscatter!(ax, xx, yy, zz ; kwargs...)
+    
+    record(fig, savepath, frames) do F
         t = F/framerate
         θ = t * rate * 2π 
         w[] = sin(θ)
     end
+    
+    nothing
+end
+
+function animateable_component3D!(
+        ax, ppca, time ;
+        positions = mean(ppca),
+        amplitude = 1,
+        component = 1,
+        cycle_freq = 0.5,  # Half a cycle per second
+        kwargs...,
+    )
+    comp = projection(ppca)[:, :, component]
+    w = @lift sin($time * cycle_freq * 2π)
+    xx = @lift(positions[1, :] + $w * amplitude * comp[1, :])
+    yy = @lift(positions[2, :] + $w * amplitude * comp[2, :])
+    zz = @lift(positions[3, :] + $w * amplitude * comp[3, :])
+
+    return meshscatter!(ax, xx, yy, zz ; kwargs...)
 end
