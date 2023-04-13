@@ -37,24 +37,38 @@ function ParticlePCA(proj::Matrix, μ::Vector, weights::Vector ; ndims = 3)
     return ParticlePCA(model, ndims, nparts)
 end
 
+
+function ParticlePCA(ppca::ParticlePCA, indices::Vector{<:Integer})
+    μ = @chain ppca begin
+        mean
+        reshape(_, 3, :)
+        _[:, indices]
+        reshape(_, :)
+    end
+
+    proj = @chain ppca.model.proj begin
+        reshape(_, 3, :, size(_, 2))
+        _[:, indices, :]
+        reshape(_, 3*length(indices), :)
+    end
+    weights = ppca.model.prinvars
+
+    return ParticlePCA(proj, μ, weights)
+end
+
+
 fit(::Type{<:ParticlePCA}, data) = ParticlePCA(data)
 
 function covariance(pca::PCA)
-    return projection(pca) * Diagonal(principalvars(pca)) * projection(pca)'
+    return Symmetric(projection(pca) * Diagonal(principalvars(pca)) * projection(pca)')
 end
 
-function covariance(ppca::ParticlePCA)
-    Σ = covariance(ppca.model)
-    s = reshape(Σ, ppca.ndims, ppca.nparts, ppca.ndims, ppca.nparts)
-    return [s[:, i, :, j] for i in 1:ppca.nparts, j in 1:ppca.nparts]
-end
-
-mean(ppca::ParticlePCA) = reshape(mean(ppca.model), ppca.ndims, :)
+mean(ppca::ParticlePCA) = mean(ppca.model)
+covariance(ppca::ParticlePCA) = covariance(ppca.model)
 
 function covariances(ppca::ParticlePCA)
     Σ = covariance(ppca.model)
-    s = reshape(Σ, ppca.ndims, ppca.nparts, ppca.ndims, ppca.nparts)
-    return [s[:, i, :, j] for i in 1:ppca.nparts, j in 1:ppca.nparts]
+    return reshape(Σ, ppca.ndims, ppca.nparts, ppca.ndims, ppca.nparts)
 end
 
 function means(ppca::ParticlePCA)
@@ -67,6 +81,12 @@ function means(ppca::ParticlePCA)
 end
 
 variances(ppca::ParticlePCA) = diag(covariances(ppca))
+
+function StatsBase.sample(ppca, nsamples)
+    μ = mean(ppca)
+    Σ = covariance(ppca)
+    return rand(MvNormal(μ, Σ), nsamples)
+end
 
 function projection(ppca::ParticlePCA)
     pca_proj = projection(ppca.model)

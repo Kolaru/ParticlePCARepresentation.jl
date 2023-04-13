@@ -7,11 +7,13 @@ using Distributions
 using LinearAlgebra
 using Makie
 using MultivariateStats
+using StatsBase
 
 import MultivariateStats: fit, mean, projection, predict, reconstruct
 
 export ParticlePCA
 export fit, projection, predict, reconstruct
+export sample
 export covariance, covariances, means, variances, blob_model
 export plot_blobs, plot_blobs!
 export plot_component3D, plot_component3D!
