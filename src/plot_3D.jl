@@ -85,10 +85,10 @@ function animate_component3D!(
     nothing
 end
 
-function animateable_component3D!(
+function component3D!(
         ax, ppca, time ;
-        positions = mean(ppca),
-        amplitude = 1,
+        positions = reshape(mean(ppca), 3, :),
+        amplitude = 0.5*maximum(abs.(positions)),
         component = 1,
         cycle_freq = 0.5,  # Half a cycle per second
         kwargs...,
@@ -100,4 +100,32 @@ function animateable_component3D!(
     zz = @lift(positions[3, :] + $w * amplitude * comp[3, :])
 
     return meshscatter!(ax, xx, yy, zz ; kwargs...)
+end
+
+animateable_component3D!(args... ; kwargs...) = component3D!(args... ; kwargs...)
+
+function trace_component3D!(
+        ax, ppca ;
+        nsteps = 20,
+        markersize = 1,
+        color = :black,
+        kwargs...
+    )
+
+    if !hasmethod(iterate, Tuple{typeof(color)})
+        color = [color]
+    end
+
+    for t in range(-0.5, 0.5 ; length = nsteps)
+        cc = map(color) do c
+            (c, 2t)
+        end
+
+        component3D!(
+            ax, ppca, t; 
+            color = color,
+            markersize = (t + 0.5) * markersize,
+            kwargs...
+        )
+    end
 end
