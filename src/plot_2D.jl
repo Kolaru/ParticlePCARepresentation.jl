@@ -123,7 +123,7 @@ end
 
 function summarize(gridpos, ppca ;
         components = 1:6,
-        positions = mean(ppca),
+        positions = reshape(mean(ppca), 3, :),
         labels = nothing,
         xlabel = "x",
         ylabel = "y",
