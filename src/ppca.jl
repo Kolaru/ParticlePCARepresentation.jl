@@ -38,7 +38,7 @@ function ParticlePCA(proj::Matrix, μ::Vector, weights::Vector ; ndims = 3)
 end
 
 
-function ParticlePCA(ppca::ParticlePCA, indices::Vector{<:Integer})
+function ParticlePCA(ppca::ParticlePCA, indices)
     μ = @chain ppca begin
         mean
         reshape(_, 3, :)
@@ -49,7 +49,7 @@ function ParticlePCA(ppca::ParticlePCA, indices::Vector{<:Integer})
     proj = @chain ppca.model.proj begin
         reshape(_, 3, :, size(_, 2))
         _[:, indices, :]
-        reshape(_, 3*length(indices), :)
+        reshape(_, 3*size(_, 2), :)
     end
     weights = ppca.model.prinvars
 
