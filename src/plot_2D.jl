@@ -146,8 +146,8 @@ function summarize(gridpos, ppca ;
 
     if show_evr
         for (j, component) in enumerate(components)
-            evar = round(ppca.model.prinvars[component] / ppca.model.tvar ; sigdigits = 2)
-            labels[j] *= "\nEVR = $evar"
+            evar = round(100 * ppca.model.prinvars[component] / ppca.model.tvar ; sigdigits = 2)
+            labels[j] *= "\nEVR = $evar%"
         end
     end
 
