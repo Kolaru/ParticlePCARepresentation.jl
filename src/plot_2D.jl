@@ -172,3 +172,9 @@ function summarize(gridpos, ppca ;
 
     return layout, axes
 end
+
+function summarize(ppca::ParticlePCA ; kwargs...)
+    fig = Figure()
+    summarize(fig[1, 1], ppca ; kwargs...)
+    fig
+end
