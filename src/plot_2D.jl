@@ -142,6 +142,11 @@ function summarize(gridpos, ppca ;
     ylims = (minimum(positions[2, :]) - pad, maximum(positions[2, :]) + pad)
     zlims = (minimum(positions[3, :]) - pad, maximum(positions[3, :]) + pad)
 
+    dy = ylims[2] - ylims[1]
+    dz = zlims[2] - zlims[1]
+
+    rowsize!(layout, 3, Relative(dz/(dy + dz)))
+
     labels = isnothing(labels) ? ["Component $C" for C in components] : labels
 
     if show_evr
