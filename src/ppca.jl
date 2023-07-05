@@ -65,6 +65,7 @@ end
 
 mean(ppca::ParticlePCA) = mean(ppca.model)
 covariance(ppca::ParticlePCA) = covariance(ppca.model)
+principalvars(ppca::ParticlePCA) = principalvars(ppca.model)
 
 function covariances(ppca::ParticlePCA)
     Σ = covariance(ppca.model)

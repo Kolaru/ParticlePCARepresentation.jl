@@ -9,10 +9,10 @@ using Makie
 using MultivariateStats
 using StatsBase
 
-import MultivariateStats: fit, mean, projection, predict, reconstruct
+import MultivariateStats: fit, mean, projection, predict, reconstruct, principalvars
 
 export ParticlePCA
-export fit, projection, predict, reconstruct
+export fit, projection, predict, reconstruct, principalvars
 export sample
 export covariance, covariances, means, variances, blob_model
 export plot_blobs, plot_blobs!
