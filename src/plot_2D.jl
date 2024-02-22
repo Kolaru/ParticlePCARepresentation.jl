@@ -124,7 +124,7 @@ end
 function summarize(gridpos, ppca ;
         components = 1:6,
         positions = reshape(mean(ppca), 3, :),
-        labels = nothing,
+        labels = ["Component $C" for C in components],
         xlabel = "x",
         ylabel = "y",
         zlabel = "z",
@@ -147,7 +147,7 @@ function summarize(gridpos, ppca ;
 
     rowsize!(layout, 3, Relative(dz/(dy + dz)))
 
-    labels = isnothing(labels) ? ["Component $C" for C in components] : labels
+    labels = isnothing(labels) ? ["" for _ in components] : labels
 
     if show_evr
         for (j, component) in enumerate(components)

@@ -14,8 +14,7 @@ import MultivariateStats: fit, mean, projection, predict, reconstruct, principal
 export ParticlePCA
 export fit, projection, predict, reconstruct, principalvars
 export sample
-export covariance, covariances, means, variances, blob_model
-export plot_blobs, plot_blobs!
+export blob_model, plot_blobs, plot_blobs!
 export plot_component3D, plot_component3D!
 export animate_component3D!, animateable_component3D!
 export plot_component2D, plot_component2D!, summarize
