@@ -14,8 +14,8 @@ begin
         ppca, positions ;
         color=[:red, :blue, :red])
 
-    ax.xlabel = "x (a. u.)"
-    ax.ylabel = "y (a. u.)"
+    ax.xlabel = "x (a.u.)"
+    ax.ylabel = "y (a.u.)"
 
     display(fig)
 end
